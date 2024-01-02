@@ -1,7 +1,7 @@
 // Set Up the SVG Canvas
-const margin = { top: 20, right: 30, bottom: 20, left: 30 };
-const width = 960 - margin.left - margin.right;
-const height = 800 - margin.top - margin.bottom;
+const svgWidth = '100vw'; // 100% of the viewport width
+const svgHeight = '50vh'; // 50% of the viewport height
+
 // Custom color palette inspired by vivid and playful styles
 const warmPalette = ['#402a22','#93fa57','#f5bb2a','#940005']; // Enhanced warm colors
 const coolPalette = ['#93fa57','#5956fc','#940005','#402a22']; // Enhanced cool colors
@@ -9,8 +9,8 @@ const coolPalette = ['#93fa57','#5956fc','#940005','#402a22']; // Enhanced cool 
 
 
 const svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", svgWidth)
+    .attr("height", svgHeight)
   .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
