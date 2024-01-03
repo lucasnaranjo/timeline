@@ -6,12 +6,26 @@ const height = 800 - margin.top - margin.bottom;
 const warmPalette = ['#402a22','#93fa57','#f5bb2a','#940005']; // Enhanced warm colors
 const coolPalette = ['#93fa57','#5956fc','#940005','#402a22']; // Enhanced cool colors
 
+// Define the Spanish locale
+const spanishLocale = d3.timeFormatLocale({
+  dateTime: "%A, %e de %B de %Y %X",
+  date: "%d/%m/%Y",
+  time: "%H:%M:%S",
+  periods: ["AM", "PM"], // or ["a. m.", "p. m."] depending on preference
+  days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+  shortDays: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+  months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+  shortMonths: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+});
+
+// Create a time format function using the Spanish locale
+const spanishTimeFormat = spanishLocale.format("%b %Y");
 
 
 const svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
-  .append("g")
+    .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
 // Time Scales
@@ -21,11 +35,6 @@ const x = d3.scaleTime()
   .domain([startDate, endDate])
   .range([0, width]);
 
-const xAxis = d3.axisBottom(x);
-svg.append("g")
-   .attr("class", "x axis")
-   .attr("transform", `translate(0,${height})`)
-   .call(xAxis);
 
 // Draw Weekly Bands
 const oneWeek = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
@@ -46,6 +55,20 @@ while (currentDate < endDate) {
 
   currentDate = weekEnd;
 }
+
+const xAxis = d3.axisTop(x)
+  .tickFormat(spanishTimeFormat); 
+  
+
+svg.append("g")
+ .attr("class", "x axis")
+ .attr("transform", "translate(0,0)") // Position at the top of the SVG
+ .call(xAxis)
+ .selectAll("text")
+ .attr("fill", "black")
+ .attr("y", 0) // Adjust this to move labels up or down
+ .style("font-family", "'Crimson Text', serif"); // Apply the 'Crimson Text' font
+
 
 // Define the blur filter
 svg.append("defs").append("filter")
@@ -70,7 +93,7 @@ d3.csv("events.csv").then(data => {
 
   // Draw dots for events
   events.append("circle")
-    .attr("r", 10) // Base size of the dots
+    .attr("r", 15) // Base size of the dots
     .attr("fill", "black")
     //.style("filter", "url(#blur-filter)"); // Apply the blur filter
     // Set color of the dots to black
@@ -131,7 +154,7 @@ function zoomed(event) {
   });
   // Update the size of the circles (dots) within each event group
   svg.selectAll(".event circle")
-    .attr("r", 10*transform.k - 0.9*(transform.k ** 2) ); // Adjust the size based on the zoom level
+    .attr("r", 15*transform.k - 1.5*(transform.k ** 2) ); // Adjust the size based on the zoom level
 
   // Update the font size of the text along the spiral path
   svg.selectAll(".event text textPath")
@@ -139,12 +162,14 @@ function zoomed(event) {
     // Calculate the font size at the transition point (transform.k = 7)
     const transitionFontSize = 1.9 ** 7;
     // Apply different logic based on the value of transform.k
-    return transform.k > 7.5 
-      ?  transitionFontSize / ((transform.k - 6)**3) + "px" // Decrease size rapidly
+    return transform.k > 7 
+      ?  transitionFontSize / ((transform.k - 6)) + "px" // Decrease size rapidly
       : 1.9 ** transform.k + "px"; // Normal increase
   });
   // Update the x-axis
-  svg.select(".x.axis").call(xAxis.scale(transform.rescaleX(x)));
+  svg.select(".x.axis").call(xAxis.scale(transform.rescaleX(x)))
+  .style("font-family", "'Crimson Text', serif"); // Apply the 'Crimson Text' font
+
 }
 
 
