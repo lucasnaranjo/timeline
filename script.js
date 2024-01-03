@@ -41,7 +41,7 @@ while (currentDate < endDate) {
     .attr("height", height)
     .attr("fill", getRandomColorFromPalette(seasonPalette)) // Assign a color based on the season
     .datum(currentDate)
-    .style("filter", "url(#blur-filter)"); // Apply the blur filter
+    //.style("filter", "url(#blur-filter)"); // Apply the blur filter
 
 
   currentDate = weekEnd;
@@ -72,7 +72,7 @@ d3.csv("events.csv").then(data => {
   events.append("circle")
     .attr("r", 10) // Base size of the dots
     .attr("fill", "black")
-    .style("filter", "url(#blur-filter)"); // Apply the blur filter
+    //.style("filter", "url(#blur-filter)"); // Apply the blur filter
     // Set color of the dots to black
 
   // Draw spiral path for each event
@@ -88,7 +88,7 @@ d3.csv("events.csv").then(data => {
     .attr("href", (d, i) => `#spiral-path-${i}`)
     .attr("fill", "white")
     .style("font-size", "1px")
-    .style("filter", "url(#blur-filter)") // Apply the blur filter
+    //.style("filter", "url(#blur-filter)") // Apply the blur filter
     .text(d => d.note);
 });
 
@@ -106,7 +106,7 @@ svg.call(zoom);
 
 function zoomed(event) {
   const transform = event.transform;
-
+  console.log(transform);
   // Update the weekly bands
   svg.selectAll("rect")
     .attr("x", d => transform.applyX(x(d)))
@@ -117,19 +117,32 @@ function zoomed(event) {
   .attr("transform", d => {
     const transformedX = transform.applyX(x(d.date));
     const transformedY = transform.applyY(d.randomY);
+    console.log(transformedX, transformedY)
     return `translate(${transformedX},${transformedY})`;
   });
-    svg.selectAll(".event path")
-    .attr("d", d => createSpiralPath(4.99 ** transform.k, 4, 100)); // Update spiral path
-
+  svg.selectAll(".event path")
+  .attr("d", d => {
+    // Smooth transition formula for spiral path size
+    const size = transform.k <= 8
+                  ? 4.99 ** transform.k
+                  : 4.99 ** 7 / ((transform.k - 7) ** 7);  // Gradual decrease after transform.k > 7
+    
+    return createSpiralPath(size, 4, 100);
+  });
   // Update the size of the circles (dots) within each event group
   svg.selectAll(".event circle")
     .attr("r", 10*transform.k - 0.9*(transform.k ** 2) ); // Adjust the size based on the zoom level
 
   // Update the font size of the text along the spiral path
   svg.selectAll(".event text textPath")
-  .style("font-size", 1.9 ** transform.k + "px"); // Adjust the font size based on the zoom level
-
+  .style("font-size", d => {
+    // Calculate the font size at the transition point (transform.k = 7)
+    const transitionFontSize = 1.9 ** 7;
+    // Apply different logic based on the value of transform.k
+    return transform.k > 7.5 
+      ?  transitionFontSize / ((transform.k - 6)**3) + "px" // Decrease size rapidly
+      : 1.9 ** transform.k + "px"; // Normal increase
+  });
   // Update the x-axis
   svg.select(".x.axis").call(xAxis.scale(transform.rescaleX(x)));
 }
